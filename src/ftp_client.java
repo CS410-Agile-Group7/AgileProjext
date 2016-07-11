@@ -16,12 +16,12 @@ public class ftp_client {
     if(args.length > 3)
       System.out.println("RTFM!"); //Yes, I know there is no manual
     
-    //shouldn't be fewer than 1 args - error
+    //shouldn't be fewer than 1 args - ask for server
     if(args.length < 1) {
       System.out.print("Server: ");
       server = console.readLine();
     }
-    //otherwise procede
+    //otherwise proceed
     //server name is the first arg
     else
       server = args[0];
@@ -69,7 +69,7 @@ public class ftp_client {
     }
     catch(Exception ex) {
     	//error catch
-      System.out.println("Something went wrong :(");
+      System.out.println("Something went wrong :( - couldn't connect to the server");
     }
   }
   
@@ -90,11 +90,13 @@ public class ftp_client {
     
     if(ftpClient.isConnected()) {
       try {
+      	System.out.println("Logging out...");
         ftpClient.logout();
         ftpClient.disconnect();
+        System.out.println("Succesfully Disconnected");
       }
       catch(Exception ex) {
-        System.out.println("Something went wrong :(");
+        System.out.println("Something went wrong :( - Couldn't logout and disconnect correctly");
       }
     }
     System.exit(0);
