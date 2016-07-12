@@ -1,10 +1,10 @@
 # AgileProject
 
-## How to Compile
-> `javac -cp .;./lib/* *.java`
+## How to Compile from within the src folder
+> `javac -cp .;../lib/* ftp_client.java`
 
 ## How to Run
-> `java -cp .;./lib/* ftp_client`
+> `java -cp .;../lib/* ftp_client`
 
 ## Optional Args
 Args | Name | Type
