@@ -7,7 +7,7 @@ public class ftp_clientTest {
 	//server info
 	String server = "ftp.sysnative.com";
   String username = "pdx@sysnative.com";
-  String password = "P455w0rd!";
+  String password = "";
   //create args
   String args[] = {server, username, password};
 	
