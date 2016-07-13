@@ -39,7 +39,13 @@ public class ftp_client {
         break;
         
         default:
-          System.out.println("\tCommand not found. For help input \"help\"");
+          //REGEX Matching
+          if(command.matches("cd local (.*)") || command.matches("cdl (.*)")) {
+            localDir = changeDirectory(localDir, command);
+          }
+          else {
+            System.out.println("\tCommand not found. For help input \"help\"");
+          }
       }
     }
     
@@ -73,6 +79,27 @@ public class ftp_client {
     }
     AnsiConsole.systemUninstall();
     return true;
+  }
+  
+  private static String changeDirectory(String dir, String input) {
+    input = input.replace("cdl","");
+    input = input.replace("cd local","");
+    input = input.trim();
+    File newDir = new File(dir, input);
+    try {
+      if (newDir.exists()) {
+        System.out.println("New Dir: " + newDir.toPath().normalize().toString());
+        return newDir.toPath().normalize().toString();
+      }
+      else {
+        System.out.println("Folder not found :(");
+        return dir;
+      }
+    }
+    catch(Exception e) {
+      System.out.println("Something went wrong :(");
+      return dir;
+    }
   }
   
   //Prints the help menu
