@@ -9,6 +9,7 @@ import static org.fusesource.jansi.Ansi.Color.*;
 
 public class ftp_client {
   private static Console console = System.console();
+  private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
   private static FTPClient ftpClient = new FTPClient();
   
   public static void main(String[] args) {
@@ -181,14 +182,30 @@ public class ftp_client {
   }
   
   //Prompts user and returns a string
+  //Bugfix for eclipse?
   private static String getVar(String request) {
     System.out.print(request + ": ");
-    return console.readLine();
+    if(console != null) {
+      return console.readLine();
+    }
+    else {
+      try {
+        return in.readLine();
+      }
+      catch(Exception ex) {
+        return null;
+      }
+    }
   }
   
   //Prompts user and returns a string w/o outputing it
+  //Does not work in eclipse so redirects to getVar()
   private static String getPrivateVar(String request) {
-	  System.out.print(request + ": ");
-	  return new String(console.readPassword());
+	  if(console != null) {
+      System.out.print(request + ": ");
+      return new String(console.readPassword());
+    }
+    else
+      return getVar(request);
   }
 }
