@@ -47,10 +47,16 @@ public class ftp_client {
         
         default:
           //REGEX Matching
+        	//change directory - cd local/cdl
           if(command.matches("cd local (.*)") || command.matches("cdl (.*)")) {
             localDir = changeDirectory(localDir, command);
           }
-          else {
+          else
+          //put file - put/p
+          if(command.matches("put (.*)") || command.matches("cdl (.*)")) {
+          	//put the given file in the given location
+          	putFile(localDir, command);
+          } else {
             System.out.println("\tCommand not found. For help input \"help\"");
           }
       }
@@ -61,6 +67,29 @@ public class ftp_client {
   }
   
   /***** Command Functions *****/
+  
+  //Puts the specified file from the local server to the specified location on the remote server
+  private static boolean putFile(String localDir, String input) {
+  	//The file to put, the location to put
+  	File outFile;
+  	String location;
+  	//remove "put"/"p" from input
+  	input = input.replace("put","");
+    input = input.replace("p","");
+    //split on whitespaces
+    String[] inputList = input.split(" "); //need to change, should match more than one whitespace
+    //if provided, the location to put the file
+    String location;
+    if (inputList[1] != null) {
+    	location = inputList[1];
+    }
+    //get the provided file
+    localDir.concat(inputList[0]);
+    outFile = new File(localDir, input);
+    
+  	//TODO
+		return false;
+  }
   
   //Lists the remote files/folders in the provided directory
   private static boolean listRemote(String dir) {
@@ -122,7 +151,7 @@ public class ftp_client {
     File newDir = new File(dir, input);
     try {
       if (newDir.exists()) {
-        System.out.println("New Dir: " + newDir.toPath().normalize().toString());
+        System.out.println("Changed Directory to: " + newDir.toPath().normalize().toString());
         return newDir.toPath().normalize().toString();
       }
       else {
