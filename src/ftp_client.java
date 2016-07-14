@@ -1,5 +1,6 @@
 import java.io.*;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
 //For pretty colors
@@ -20,6 +21,11 @@ public class ftp_client {
     while(ftpClient.isConnected()) {
       command = getVar("command");
       switch(command) {
+      	case "list remote":
+      	case "lsr":
+      		listRemote(null);
+      	break;
+      
         case "list local":
         case "lsl":
           listLocal(localDir);
@@ -55,6 +61,27 @@ public class ftp_client {
   }
   
   /***** Command Functions *****/
+  
+  //Lists the remote files/folders in the provided directory
+  private static boolean listRemote(String dir) {
+  	try {
+			FTPFile[] fileList = ftpClient.listFiles(dir);
+			
+			System.out.println("Remote Directory: " + dir);
+      for (int i = 0; i < fileList.length; ++i) {
+        if(fileList[i].isFile()) {
+          System.out.println("\t" + fileList[i].getName());
+        }
+        else if(fileList[i].isDirectory()) {
+          System.out.println("\t" + fileList[i].getName());
+        }
+      }
+		} catch (IOException e) {
+			return false;
+			//e.printStackTrace();
+		}
+		return true;
+  }
   
   //Lists the local files/folders in the provided directory
   private static boolean listLocal(String dir) {
