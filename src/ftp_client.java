@@ -67,6 +67,8 @@ public class ftp_client {
   	try {
 			FTPFile[] fileList = ftpClient.listFiles(dir);
 			
+			//get the full path before printing
+			dir = ftpClient.getLocalAddress().toString();
 			System.out.println("Remote Directory: " + dir);
       for (int i = 0; i < fileList.length; ++i) {
         if(fileList[i].isFile()) {
