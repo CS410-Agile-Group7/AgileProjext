@@ -7,6 +7,7 @@ public class ftp_client {
   private static Console console = System.console();
   private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
   private static FTPClient ftpClient = new FTPClient();
+  private static FileInputStream fileInputStream = null;
   
   public static void main(String[] args) {
     setupFTPClient(args);
@@ -66,8 +67,9 @@ public class ftp_client {
   //Puts the specified file from the local server to the specified location on the remote server
   private static boolean putFile(String localDir, String input) {
   	//The file to put, the location to put
-  	File outFile;
-  	String location = ftpClient.getLocalAddress.toString();
+    File file;
+  	String outFile;
+  	String location = ftpClient.getLocalAddress().toString();
   	//remove "put"/"p" from input
   	input = input.replace("put","");
     input = input.replace("p","");
@@ -78,12 +80,15 @@ public class ftp_client {
     	location.concat(inputList[1]);
     }
     //get the provided file
-    localDir.concat(inputList[0]);
-    outFile = new File(localDir, input);
+    outFile = localDir;
+    outFile.concat(inputList[0]);
+    file = new File(outFile);
     //check the file actually exists
     try {
-      if (outFile.exists()) {
-        //TODO
+      if (file.exists()) {
+        //if so, put the file out
+        fileInputStream = new FileInputStream(outFile);
+        ftpClient.storeFile(outFile, fileInputStream);
       }
       else {
         System.out.println("File not found :(");
