@@ -159,9 +159,9 @@ public class ftp_client {
   }
   
   //Clears the console
-  //Fix me later!
   private static void clear() {
-    //System.out.println(ansi().eraseScreen());
+    System.out.print("\033[H\033[2J");  
+    System.out.flush(); 
   }
   
   //Logoff and exit
