@@ -179,7 +179,7 @@ public class ftp_client {
   
   //Clears the console
   private static void clear() {
-    System.out.print("\033[H\033[2J");  
+    System.out.print("\033[H\033[2J");  //clear then home
     System.out.flush(); 
   }
   
