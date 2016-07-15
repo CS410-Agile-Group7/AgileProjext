@@ -79,7 +79,6 @@ public class ftp_client {
     //split on whitespaces
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
     //if provided, the location to put the file
-    String location;
     if (inputList[1] != null) {
     	location = inputList[1];
     }
