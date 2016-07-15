@@ -67,7 +67,7 @@ public class ftp_client {
   private static boolean putFile(String localDir, String input) {
   	//The file to put, the location to put
   	File outFile;
-  	String location;
+  	String location = ftpClient.getLocalAddress.toString();
   	//remove "put"/"p" from input
   	input = input.replace("put","");
     input = input.replace("p","");
@@ -75,11 +75,25 @@ public class ftp_client {
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
     //if provided, the location to put the file
     if (inputList[1] != null) {
-    	location = inputList[1];
+    	location.concat(inputList[1]);
     }
     //get the provided file
     localDir.concat(inputList[0]);
     outFile = new File(localDir, input);
+    //check the file actually exists
+    try {
+      if (outFile.exists()) {
+        //TODO
+      }
+      else {
+        System.out.println("File not found :(");
+        return false;
+      }
+    }
+    catch(Exception e) {
+      System.out.println("Something went wrong :(");
+      return false;
+    }
     
   	//TODO
 		return false;
