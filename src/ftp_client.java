@@ -3,11 +3,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 
-//For pretty colors
-//import org.fusesource.jansi.AnsiConsole;
-//import static org.fusesource.jansi.Ansi.*;
-//import static org.fusesource.jansi.Ansi.Color.*;
-
 public class ftp_client {
   private static Console console = System.console();
   private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -115,31 +110,24 @@ public class ftp_client {
   
   //Lists the local files/folders in the provided directory
   private static boolean listLocal(String dir) {
-   // AnsiConsole.systemInstall();
     System.out.println();
     try {
       File folder = new File(dir);
       File[] fileList = folder.listFiles();
-      //System.out.println(ansi().fg(MAGENTA) + "Current Directory: " + ansi().fg(DEFAULT) + dir);
       System.out.println("Current Directory: " + dir);
       for (int i = 0; i < fileList.length; ++i) {
         if(fileList[i].isFile()) {
-          //System.out.println("\t" + ansi().fg(CYAN) + fileList[i].getName());
           System.out.println("\t" + fileList[i].getName());
         }
         else if(fileList[i].isDirectory()) {
-          //System.out.println("\t" + ansi().fg(BLUE) + fileList[i].getName());
           System.out.println("\t" + fileList[i].getName());
         }
       }
-      //System.out.println(ansi().fg(DEFAULT));
       System.out.println();
     }
     catch(Exception e) {
-      //AnsiConsole.systemUninstall();
       return false;
     }
-    //AnsiConsole.systemUninstall();
     return true;
   }
   
@@ -173,9 +161,7 @@ public class ftp_client {
   //Clears the console
   //Fix me later!
   private static void clear() {
-    //AnsiConsole.systemInstall();
     //System.out.println(ansi().eraseScreen());
-    //AnsiConsole.systemUninstall();
   }
   
   //Logoff and exit
@@ -198,7 +184,7 @@ public class ftp_client {
   private static void setupFTPClient(String[] args) {	
     //shouldn't be more than 3 args - error
     if(args.length > 3)
-    System.out.println("RTFM!"); //Yes, I know there is no manual
+      System.out.println("RTFM!"); //Yes, I know there is no manual
     
     String server = (args.length < 1) ? getVar("Server") : args[0];
     int port = 21;
