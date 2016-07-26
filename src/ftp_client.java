@@ -70,18 +70,20 @@ public class ftp_client {
     File file;
   	String outFile;
   	String location = ftpClient.getLocalAddress().toString();
-  	//remove "put"/"p" from input
+  	//remove "put"/"p" from input, get rid of blank spaces
   	input = input.replace("put","");
     input = input.replace("p","");
+    input = input.trim();
     //split on whitespaces
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
     //if provided, the location to put the file
-    if (inputList[1] != null) {
-    	location.concat(inputList[1]);
+    if (inputList.length == 2) {
+    	location = location.concat(inputList[1]);
     }
     //get the provided file
     outFile = localDir;
-    outFile.concat(inputList[0]);
+    outFile = outFile.concat("/");
+    outFile = outFile.concat(inputList[0]);
     file = new File(outFile);
     //check the file actually exists
     try {
@@ -89,6 +91,12 @@ public class ftp_client {
         //if so, put the file out
         fileInputStream = new FileInputStream(outFile);
         ftpClient.storeFile(outFile, fileInputStream);
+        //verify the file is there
+        FTPFile[] remoteFile = ftpClient.listFiles(inputList[0]);
+        if(remoteFile.length == 1)
+        	return true;
+        else
+        	return false;
       }
       else {
         System.out.println("File not found :(");
@@ -99,9 +107,6 @@ public class ftp_client {
       System.out.println("Something went wrong :(");
       return false;
     }
-    
-  	//TODO
-		return false;
   }
   
   //Lists the remote files/folders in the provided directory
