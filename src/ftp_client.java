@@ -2,6 +2,7 @@ import java.io.*;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import java.util.Scanner;
 
 public class ftp_client {
   private static Console console = System.console();
@@ -28,8 +29,8 @@ public class ftp_client {
   // OUTPUT:
   //    - true if the information is correct and the connection can be made
   //    - false if the information is not correct or the connection cannot be done
-  public boolean connect(String[] input) {
-    if (input.length != 6) {
+  public boolean connect(String[] inputs_) {
+    if (inputs_.length != 6) {
       return false;
     }
 
@@ -37,17 +38,17 @@ public class ftp_client {
     String port   = "";
     String server = "";
 
-    if (input[0] == "-p") {
-      if (input[2] == "-s") {
-        port = input[1];
-        server = input[3];
+    if (inputs_[0] == "-p") {
+      if (inputs_[2] == "-s") {
+        port = inputs_[1];
+        server = inputs_[3];
       } else {
         return false;
       }
-    } else if (input[0] == "-s") {
-      if (input[2] == "-p") {
-        port = input[3];
-        server = input[1];
+    } else if (inputs_[0] == "-s") {
+      if (inputs_[2] == "-p") {
+        port = inputs_[3];
+        server = inputs_[1];
       } else {
         return false;
       }
@@ -60,8 +61,8 @@ public class ftp_client {
     }
 
     int int_port = Integer.parseInt(port);
-    String pass = input[4];
-    String user = input[5];
+    String pass = inputs_[4];
+    String user = inputs_[5];
 
     // try to connect
     // private static boolean login(String server, int port, String user, String password)
@@ -74,9 +75,20 @@ public class ftp_client {
 
   public void main(String[] args) {
     //setupFTPClient(args);
-    if (!connect(args)) {
-      System.out.println("there was a problem with your connection");
-      System.exit(0);
+    if (args.length == 0) {
+      System.out.println("enter connection info: ");
+      Scanner input = new Scanner ( System.in );
+      String input_str = input.nextLine();
+      String[] input_arr = input_str.split(" ");
+      if (!connect(input_arr)) {
+        System.out.println("there was a problem with your connection");
+        System.exit(0);
+      }
+    } else {
+      if (!connect(args)) {
+        System.out.println("there was a problem with your connection");
+        System.exit(0);
+      }
     }
     String command;
     String localDir = System.getProperty("user.dir");
