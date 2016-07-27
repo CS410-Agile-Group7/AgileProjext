@@ -8,12 +8,79 @@ public class ftp_client {
   private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
   private static FTPClient ftpClient = new FTPClient();
   private static FileInputStream fileInputStream = null;
-  
-  public static void main(String[] args) {
-    setupFTPClient(args);
+
+  public boolean isInteger(String input)
+  {
+     try {
+        Integer.parseInt(input);
+        return true;
+     } catch(NumberFormatException e) {
+        return false;
+     }
+  }
+
+  // this function is part of the task to handle server and port for command line and a connection command
+  // it is handed an array of args that look like this
+  // -p [port] -s [server] [password] [user]
+  // the -p and -s may appear in any order such that port follows -p and the same with server
+  // PARAMETERS:
+  //    - array of strings
+  // OUTPUT:
+  //    - true if the information is correct and the connection can be made
+  //    - false if the information is not correct or the connection cannot be done
+  public boolean connect(String[] input) {
+    if (input.length != 6) {
+      return false;
+    }
+
+    // parse the input into the correct locations
+    String port   = "";
+    String server = "";
+
+    if (input[0] == "-p") {
+      if (input[2] == "-s") {
+        port = input[1];
+        server = input[3];
+      } else {
+        return false;
+      }
+    } else if (input[0] == "-s") {
+      if (input[2] == "-p") {
+        port = input[3];
+        server = input[1];
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+
+    if (!isInteger(port)) {
+      return false;
+    }
+
+    int int_port = Integer.parseInt(port);
+    String pass = input[4];
+    String user = input[5];
+
+    // try to connect
+    // private static boolean login(String server, int port, String user, String password)
+    if (!login(server, int_port, pass, user)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  public void main(String[] args) {
+    //setupFTPClient(args);
+    if (!connect(args)) {
+      System.out.println("there was a problem with your connection");
+      System.exit(0);
+    }
     String command;
     String localDir = System.getProperty("user.dir");
-    
+
     while(ftpClient.isConnected()) {
       command = getVar("command");
       switch(command) {
@@ -21,26 +88,26 @@ public class ftp_client {
       	case "lsr":
       		listRemote(null);
       	break;
-      
+
         case "list local":
         case "lsl":
           listLocal(localDir);
         break;
-        
+
         case "exit":
         case "logout":
           exit();
         break;
-        
+
         case "help":
           help();
         break;
-        
+
         case "cls":
         case "clear":
           clear();
         break;
-        
+
         default:
           //REGEX Matching
         	//change directory - cd local/cdl
@@ -52,7 +119,7 @@ public class ftp_client {
           if(command.matches("put (.*)") || command.matches("p (.*)")) {
           	//put the given file to the remote server
           	putFile(localDir, command);
-          } else 
+          } else
           //put multiple putm/pm
           if(command.matches("putm (.*)") || command.matches("pm (.*)")) {
           	putMultiple(localDir, command);
@@ -61,13 +128,13 @@ public class ftp_client {
           }
       }
     }
-    
+
     logout();
     System.exit(0);
   }
-  
+
   /***** Command Functions *****/
-  
+
   //Puts all specified files from lcoal server to specified location on the remote server
   private static boolean putMultiple(String localDir, String input) {
   	//The file to put
@@ -90,7 +157,7 @@ public class ftp_client {
     //if all putFiles go correctly, return true
     return true;
   }
-  
+
   //Puts the specified file from the local server to the specified location on the remote server
   private static boolean putFile(String localDir, String input) {
   	//The file to put, the location to put
@@ -130,12 +197,12 @@ public class ftp_client {
       return false;
     }
   }
-  
+
   //Lists the remote files/folders in the provided directory
   private static boolean listRemote(String dir) {
   	try {
 			FTPFile[] fileList = ftpClient.listFiles(dir);
-			
+
 			//get the full path before printing
 			dir = ftpClient.getLocalAddress().toString();
 			System.out.println("Remote Directory: " + dir);
@@ -153,7 +220,7 @@ public class ftp_client {
 		}
 		return true;
   }
-  
+
   //Lists the local files/folders in the provided directory
   private static boolean listLocal(String dir) {
     System.out.println();
@@ -176,7 +243,7 @@ public class ftp_client {
     }
     return true;
   }
-  
+
   private static String changeDirectory(String dir, String input) {
     input = input.replace("cdl","");
     input = input.replace("cd local","");
@@ -197,26 +264,26 @@ public class ftp_client {
       return dir;
     }
   }
-  
+
   //Prints the help menu
   private static void help() {
     System.out.println("RTFM"); //fix me
     System.out.println();
   }
-  
+
   //Clears the console
   private static void clear() {
     System.out.print("\033[H\033[2J");  //clear then home
-    System.out.flush(); 
+    System.out.flush();
   }
-  
+
   //Logoff and exit
   private static void exit() {
     logout();
   }
-  
+
   /***** Utility Functions *****/
-  
+
   //gets reply from the server
   private static void showServerReply(FTPClient ftpClient) {
     String[] replies = ftpClient.getReplyStrings();
@@ -225,21 +292,21 @@ public class ftp_client {
       for (String reply : replies)
         System.out.println("SERVER: " + reply);
   }
-  
+
   //Gets input from user or args and calls login
-  private static void setupFTPClient(String[] args) {	
+  private static void setupFTPClient(String[] args) {
     //shouldn't be more than 3 args - error
     if(args.length > 3)
       System.out.println("RTFM!"); //Yes, I know there is no manual
-    
+
     String server = (args.length < 1) ? getVar("Server") : args[0];
     int port = 21;
     String username  = (args.length < 2) ? getVar("User") : args[1];
     String password  = (args.length < 3) ? getPrivateVar("Password") : args[2];
-	
+
     login(server,port,username,password);
   }
-  
+
   private static boolean login(String server, int port, String user, String password) {
     try {
       ftpClient.connect(server, port);
@@ -257,7 +324,7 @@ public class ftp_client {
 	  return false;
     }
   }
-  
+
   private static boolean logout() {
     if(ftpClient.isConnected()) {
       try {
@@ -274,7 +341,7 @@ public class ftp_client {
     }
     return false;
   }
-  
+
   //Prompts user and returns a string
   //Bugfix for eclipse?
   private static String getVar(String request) {
@@ -291,7 +358,7 @@ public class ftp_client {
       }
     }
   }
-  
+
   //Prompts user and returns a string w/o outputing it
   //Does not work in eclipse so redirects to getVar()
   private static String getPrivateVar(String request) {
