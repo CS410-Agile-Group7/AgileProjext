@@ -49,9 +49,13 @@ public class ftp_client {
           }
           else
           //put file - put/p
-          if(command.matches("put (.*)") || command.matches("cdl (.*)")) {
-          	//put the given file in the given location
+          if(command.matches("put (.*)") || command.matches("p (.*)")) {
+          	//put the given file to the remote server
           	putFile(localDir, command);
+          } else 
+          //put multiple putm/pm
+          if(command.matches("putm (.*)") || command.matches("pm (.*)")) {
+          	putMultiple(localDir, command);
           } else {
             System.out.println("\tCommand not found. For help input \"help\"");
           }
@@ -64,22 +68,40 @@ public class ftp_client {
   
   /***** Command Functions *****/
   
+  //Puts all specified files from lcoal server to specified location on the remote server
+  private static boolean putMultiple(String localDir, String input) {
+  	//The file to put
+    File file;
+  	String outFile;
+
+  	//remove "put"/"p" from input, get rid of blank spaces
+  	input = input.replace("putm","");
+    input = input.replace("pm","");
+    input = input.trim();
+    //split on whitespaces
+    String[] inputList = input.split(" "); //need to change, should match more than one whitespace
+    //put file for each file
+    for(String i: inputList) {
+    	i = "put".concat(i);
+    	//if any of the putFiles go wrong, return false
+    	if(putFile(localDir, i) == false)
+    		return false;
+    }
+    //if all putFiles go correctly, return true
+    return true;
+  }
+  
   //Puts the specified file from the local server to the specified location on the remote server
   private static boolean putFile(String localDir, String input) {
   	//The file to put, the location to put
     File file;
   	String outFile;
-  	String location = ftpClient.getLocalAddress().toString();
   	//remove "put"/"p" from input, get rid of blank spaces
   	input = input.replace("put","");
     input = input.replace("p","");
     input = input.trim();
     //split on whitespaces
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
-    //if provided, the location to put the file
-    if (inputList.length == 2) {
-    	location = location.concat(inputList[1]);
-    }
     //get the provided file
     outFile = localDir;
     outFile = outFile.concat("/");
