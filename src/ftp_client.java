@@ -2,7 +2,7 @@ import java.io.*;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import java.util.Scanner;
+import java.util.*;
 
 public class ftp_client {
   private static Console console = System.console();
@@ -30,7 +30,7 @@ public class ftp_client {
   //    - true if the information is correct and the connection can be made
   //    - false if the information is not correct or the connection cannot be done
   public boolean connect(String[] inputs_) {
-    if (inputs_.length != 6) {
+    if (inputs_.length <= 5) {
       return false;
     }
 
@@ -69,8 +69,51 @@ public class ftp_client {
     if (!login(server, int_port, pass, user)) {
       return false;
     } else {
+      if (inputs_.length > 6) {
+
+      } else {
+        return true;
+      }
+    }
+
+    // automation for features comes after here
+    // to do a get or put
+    // --GetFile= <file name>
+    // --PutFile= <file name>
+    // lists can exist
+    // --GetFiles= <file 1> <file 2>
+    // no other automations can follow a list
+
+    int idx = 6;
+
+    if (inputs_[idx] == "--GetFile=") {
+      // run a get file
+      /*
+      if (!getFile_args(inputs_[idx + 1])) {
+        System.out.println("there was an error with your file get");
+        return true;
+      }
+      */
+      System.out.println("this feature does not exist");
+      return true;
+    } else if (inputs_[idx] == "--PutFile=") {
+      if (!putFile_args(inputs_[idx + 1])) {
+        System.out.println("there was an error with your file get");
+        return true;
+      }
+    } else if(inputs_[idx] == "--GetFiles=") {
+      /*
+      */
+      System.out.println("this feature does not exist");
+    } else if(inputs_[idx] == "--PutFiles=") {
+      // acquire array
+      String[] inputs__ = Arrays.copyOfRange(inputs_, idx + 1, inputs_.length - 1);
+      putFile_args_m(inputs__);
+    } else {
+      System.out.println("invalid argument");
       return true;
     }
+    return true;
   }
 
   public void main(String[] args) {
@@ -208,6 +251,45 @@ public class ftp_client {
       System.out.println("Something went wrong :(");
       return false;
     }
+  }
+
+  public boolean putFile_args_m(String [] names) {
+    for(String name : names) {
+      putFile_args(name);
+    }
+
+    return true;
+  }
+
+  public boolean putFile_args(String name) {
+    File file;
+    String outFile;
+    String[] inputList = name.split(" ");
+    String localDir = System.getProperty("user.dir");
+
+    outFile = localDir;
+    outFile = outFile.concat("/");
+    outFile = outFile.concat(inputList[0]);
+    file = new File(outFile);
+
+    try {
+      if (file.exists()) {
+        //if so, put the file out
+        fileInputStream = new FileInputStream(outFile);
+        ftpClient.storeFile(outFile, fileInputStream);
+        //verify the file is there
+        FTPFile[] remoteFile = ftpClient.listFiles(inputList[0]);
+        if(remoteFile.length == 1)
+          return true;
+        else
+          return false;
+        }
+    } catch (Exception e) {
+      System.out.println("Something went wrong :(");
+      return false;
+    }
+
+    return true;
   }
 
   //Lists the remote files/folders in the provided directory
