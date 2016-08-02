@@ -10,7 +10,7 @@ public class ftp_client {
   private static FTPClient ftpClient = new FTPClient();
   private static FileInputStream fileInputStream = null;
 
-  public boolean isInteger(String input)
+  public static boolean isInteger(String input)
   {
      try {
         Integer.parseInt(input);
@@ -29,7 +29,7 @@ public class ftp_client {
   // OUTPUT:
   //    - true if the information is correct and the connection can be made
   //    - false if the information is not correct or the connection cannot be done
-  public boolean connect(String[] inputs_) {
+  public static boolean connect(String[] inputs_) {
     if (inputs_.length <= 5) {
       return false;
     }
@@ -116,7 +116,7 @@ public class ftp_client {
     return true;
   }
 
-  public void main(String[] args) {
+  public static void main(String[] args) {
     //setupFTPClient(args);
     if (args.length == 0) {
       System.out.println("enter connection info: ");
@@ -253,7 +253,7 @@ public class ftp_client {
     }
   }
 
-  public boolean putFile_args_m(String [] names) {
+  public static boolean putFile_args_m(String [] names) {
     for(String name : names) {
       putFile_args(name);
     }
@@ -261,7 +261,7 @@ public class ftp_client {
     return true;
   }
 
-  public boolean putFile_args(String name) {
+  public static boolean putFile_args(String name) {
     File file;
     String outFile;
     String[] inputList = name.split(" ");
