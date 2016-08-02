@@ -66,7 +66,7 @@ public class ftp_client {
 
     // try to connect
     // private static boolean login(String server, int port, String user, String password)
-    if (!login(server, int_port, pass, user)) {
+    if (!login(server, int_port, user, pass)) {
       return false;
     } else {
       if (inputs_.length > 6) {
