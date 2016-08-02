@@ -316,7 +316,7 @@ public class ftp_client {
   }
 
   //Lists the local files/folders in the provided directory
-  private static boolean listLocal(String dir) {
+  protected static boolean listLocal(String dir) {
     System.out.println();
     try {
       File folder = new File(dir);
