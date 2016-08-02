@@ -38,15 +38,15 @@ public class ftp_client {
     String port   = "";
     String server = "";
 
-    if (inputs_[0] == "-p") {
-      if (inputs_[2] == "-s") {
+    if (inputs_[0].equals("-p")) {
+      if (inputs_[2].equals("-s")) {
         port = inputs_[1];
         server = inputs_[3];
       } else {
         return false;
       }
-    } else if (inputs_[0] == "-s") {
-      if (inputs_[2] == "-p") {
+    } else if (inputs_[0].equals("-s")) {
+      if (inputs_[2].equals("-p")) {
         port = inputs_[3];
         server = inputs_[1];
       } else {
@@ -86,7 +86,7 @@ public class ftp_client {
 
     int idx = 6;
 
-    if (inputs_[idx] == "--GetFile=") {
+    if (inputs_[idx].equals("--GetFile=")) {
       // run a get file
       /*
       if (!getFile_args(inputs_[idx + 1])) {
@@ -96,16 +96,16 @@ public class ftp_client {
       */
       System.out.println("this feature does not exist");
       return true;
-    } else if (inputs_[idx] == "--PutFile=") {
+    } else if (inputs_[idx].equals("--PutFile=")) {
       if (!putFile_args(inputs_[idx + 1])) {
         System.out.println("there was an error with your file get");
         return true;
       }
-    } else if(inputs_[idx] == "--GetFiles=") {
+    } else if(inputs_[idx].equals("--GetFiles=")) {
       /*
       */
       System.out.println("this feature does not exist");
-    } else if(inputs_[idx] == "--PutFiles=") {
+    } else if(inputs_[idx].equals("--PutFiles=")) {
       // acquire array
       String[] inputs__ = Arrays.copyOfRange(inputs_, idx + 1, inputs_.length - 1);
       putFile_args_m(inputs__);
