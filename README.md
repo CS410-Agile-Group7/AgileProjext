@@ -6,9 +6,11 @@
 ## How to Run
 > `java -cp .;../lib/* ftp_client`
 
-## Optional Args
-Args | Name | Type
---- | --- | ---
-args[0] | Server | String
-args[1] | Username | String
-args[2] | Password | String
+## Example Connection
+> `-p 21 -s server password user`
+
+## How to Compile Tests from within the src folder
+> `javac -cp .;../lib/* ftp_clientTest.java`
+
+## How to Run Tests
+> `java -cp .;../lib/* org.junit.runner.JUnitCore ftp_clientTest`
