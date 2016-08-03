@@ -30,7 +30,7 @@ public class ftp_client {
   //    - true if the information is correct and the connection can be made
   //    - false if the information is not correct or the connection cannot be done
   public static boolean connect(String[] inputs_) {
-    if (inputs_.length <= 5) {
+    if (inputs_ == null || inputs_.length <= 5) {
       return false;
     }
 
@@ -293,7 +293,7 @@ public class ftp_client {
   }
 
   //Lists the remote files/folders in the provided directory
-  private static boolean listRemote(String dir) {
+  static boolean listRemote(String dir) {
   	try {
 			FTPFile[] fileList = ftpClient.listFiles(dir);
 
@@ -419,7 +419,7 @@ public class ftp_client {
     }
   }
 
-  private static boolean logout() {
+  static boolean logout() {
     if(ftpClient.isConnected()) {
       try {
       	System.out.println("Logging out...");
