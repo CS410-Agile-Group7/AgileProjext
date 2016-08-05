@@ -156,12 +156,20 @@ public class ftp_client {
           break;
 
         case "delete directory":
-        case "delete":
-        case "rm":
-        case "remove":
+        case "delete dir":
+        case "rm dir":
+        case "rmd":
+        case "remove directory":
           removeDirectory();
           break;
 
+
+        case "delete file":
+        case "rm file":
+        case "remove file":
+        case "rmf":
+          removeFile();
+          break;
 
         case "exit":
         case "logout":
@@ -211,8 +219,9 @@ public class ftp_client {
       Scanner in = new Scanner(System.in);
       String toCreate = getVar("Please enter the directory name");
       do {
-        ftpClient.changeWorkingDirectory("/" + toCreate);
+        ftpClient.changeWorkingDirectory("/" + toCreate); //Tries to see if that directory alraedy exists
         returnCode = ftpClient.getReplyCode();
+        //If the directory exists, then the reply code is unavailable (giving a return code other than 550)
         if(returnCode != 550) {
           System.out.println("The directory '" + toCreate + "' already exists.");
           System.out.println("Do you want to enter another directory? (Y/N)");
@@ -227,7 +236,7 @@ public class ftp_client {
             return false;
           }
         }
-      } while(returnCode != 550);
+      } while(returnCode != 550); //Prompts user for another directory name if the one they enter already exists
       ftpClient.changeWorkingDirectory("/");
       boolean success = ftpClient.makeDirectory(toCreate);
       //showServerReply(ftpClient);
@@ -254,6 +263,7 @@ public class ftp_client {
       do {
       ftpClient.changeWorkingDirectory("/" + toRemove);
       returnCode = ftpClient.getReplyCode();
+        //Return code is 550 if the directory we tried to change into doesn't exist
       if(returnCode == 550) {
         System.out.println("The directory '" + toRemove + "' doesn't exist.");
         System.out.println("Do you want to enter another directory? (Y/N)");
@@ -283,6 +293,46 @@ public class ftp_client {
       return false;
     }
     }
+
+  //Remove file from server
+  private static boolean removeFile() {
+    try {
+      Scanner in = new Scanner(System.in);
+      int returnCode;
+      InputStream inputStream;
+      String toDelete = getVar("File to delete (with extension and path if file is in subdirectory)");
+      do {
+        ftpClient.changeWorkingDirectory("/");
+        inputStream = ftpClient.retrieveFileStream(toDelete);
+        returnCode = ftpClient.getReplyCode();
+        //Return code is 550 if the directory we tried to change into doesn't exist
+        if (inputStream == null || returnCode == 550) {
+          System.out.println(toDelete + " is not a valid file. Could not delete.");
+          System.out.println("Do you want to enter another file? (Y/N)");
+          char reply = in.next().charAt(0);
+          in.nextLine();
+          reply = Character.toUpperCase(reply);
+          if (reply == 'Y') {
+            toDelete = getVar("Please enter another file to delete");
+          } else
+            return false;
+        }
+      } while (inputStream == null || returnCode == 550);
+      boolean wasDeleted = ftpClient.deleteFile(toDelete);
+      ftpClient.changeWorkingDirectory("/");
+      if(wasDeleted){
+        System.out.println(toDelete + " was successfully deleted.");
+        return true;
+      }
+      else{
+        System.out.println("Couldn't delete " + toDelete);
+        return false;
+      }
+    } catch (IOException ex) {
+      System.out.println("There was an error.");
+      return false;
+    }
+  }
 
 
   //Puts all specified files from lcoal server to specified location on the remote server
