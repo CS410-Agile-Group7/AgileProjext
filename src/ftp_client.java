@@ -30,7 +30,7 @@ public class ftp_client {
   //    - true if the information is correct and the connection can be made
   //    - false if the information is not correct or the connection cannot be done
   public static boolean connect(String[] inputs_) {
-    if (inputs_.length <= 5) {
+    if (inputs_ == null || inputs_.length <= 5) {
       return false;
     }
 
@@ -149,6 +149,28 @@ public class ftp_client {
           listLocal(localDir);
         break;
 
+        case "make directory":
+        case "mk dir":
+        case "mkdir":
+          createDirectory();
+          break;
+
+        case "delete directory":
+        case "delete dir":
+        case "rm dir":
+        case "rmd":
+        case "remove directory":
+          removeDirectory();
+          break;
+
+
+        case "delete file":
+        case "rm file":
+        case "remove file":
+        case "rmf":
+          removeFile();
+          break;
+
         case "exit":
         case "logout":
           exit();
@@ -190,6 +212,129 @@ public class ftp_client {
 
   /***** Command Functions *****/
 
+  //Creates directory on remote server, verifying that the directory doesn't already exist first
+  private static boolean createDirectory() {
+    try {
+      int returnCode;
+      Scanner in = new Scanner(System.in);
+      String toCreate = getVar("Please enter the directory name");
+      do {
+        ftpClient.changeWorkingDirectory("/" + toCreate); //Tries to see if that directory alraedy exists
+        returnCode = ftpClient.getReplyCode();
+        //If the directory exists, then the reply code is unavailable (giving a return code other than 550)
+        if(returnCode != 550) {
+          System.out.println("The directory '" + toCreate + "' already exists.");
+          System.out.println("Do you want to enter another directory? (Y/N)");
+          char reply = in.next().charAt(0);
+          in.nextLine();
+          reply = Character.toUpperCase(reply);
+          if(reply == 'Y') {
+            toCreate = getVar("Please enter another directory name");
+          }
+          else {
+            ftpClient.changeWorkingDirectory("/");
+            return false;
+          }
+        }
+      } while(returnCode != 550); //Prompts user for another directory name if the one they enter already exists
+      ftpClient.changeWorkingDirectory("/");
+      boolean success = ftpClient.makeDirectory(toCreate);
+      //showServerReply(ftpClient);
+      if (success) {
+        System.out.println("Successfully created directory: " + toCreate);
+        return true;
+      } else {
+        System.out.println("Failed to create directory: " + toCreate);
+        return false;
+      }
+    } catch (IOException ex) {
+      System.out.println("Something went wrong. Failed to create directory.");
+      ex.printStackTrace();
+      return false;
+    }
+  }
+
+  //Removes directory if it is empty
+  private static boolean removeDirectory() {
+    try {
+      Scanner in = new Scanner(System.in);
+      int returnCode;
+      String toRemove = getVar("Please enter the directory to delete");
+      do {
+      ftpClient.changeWorkingDirectory("/" + toRemove);
+      returnCode = ftpClient.getReplyCode();
+        //Return code is 550 if the directory we tried to change into doesn't exist
+      if(returnCode == 550) {
+        System.out.println("The directory '" + toRemove + "' doesn't exist.");
+        System.out.println("Do you want to enter another directory? (Y/N)");
+        char reply = in.next().charAt(0);
+        in.nextLine();
+        reply = Character.toUpperCase(reply);
+        if (reply == 'Y') {
+          toRemove = getVar("Please enter another directory to delete");
+        }
+        else
+          return false;
+      }
+      }while(returnCode == 550);
+      ftpClient.changeWorkingDirectory("/");
+      boolean deleted = ftpClient.removeDirectory("/" + toRemove);
+      if(deleted){
+        System.out.println("The directory " + toRemove + " was removed");
+        return true;
+      }
+      else
+      {
+       System.out.println("Couldn't delete directory. It may not be empty.");
+        return false;
+      }
+    }catch(IOException ex){
+      System.out.println("There was an error.");
+      return false;
+    }
+    }
+
+  //Remove file from server
+  private static boolean removeFile() {
+    try {
+      Scanner in = new Scanner(System.in);
+      int returnCode;
+      InputStream inputStream;
+      String toDelete = getVar("File to delete (with extension and path if file is in subdirectory)");
+      do {
+        ftpClient.changeWorkingDirectory("/");
+        inputStream = ftpClient.retrieveFileStream(toDelete);
+        returnCode = ftpClient.getReplyCode();
+        //Return code is 550 if the directory we tried to change into doesn't exist
+        if (inputStream == null || returnCode == 550) {
+          System.out.println(toDelete + " is not a valid file. Could not delete.");
+          System.out.println("Do you want to enter another file? (Y/N)");
+          char reply = in.next().charAt(0);
+          in.nextLine();
+          reply = Character.toUpperCase(reply);
+          if (reply == 'Y') {
+            toDelete = getVar("Please enter another file to delete");
+          } else
+            return false;
+        }
+      } while (inputStream == null || returnCode == 550);
+      boolean wasDeleted = ftpClient.deleteFile(toDelete);
+      ftpClient.changeWorkingDirectory("/");
+      if(wasDeleted){
+        System.out.println(toDelete + " was successfully deleted.");
+        return true;
+      }
+      else{
+        System.out.println("Couldn't delete " + toDelete);
+        return false;
+      }
+    } catch (IOException ex) {
+      System.out.println("There was an error.");
+      return false;
+    }
+  }
+
+
   //Puts all specified files from lcoal server to specified location on the remote server
   private static boolean putMultiple(String localDir, String input) {
   	//The file to put
@@ -214,7 +359,7 @@ public class ftp_client {
   }
 
   //Puts the specified file from the local server to the specified location on the remote server
-  private static boolean putFile(String localDir, String input) {
+  protected static boolean putFile(String localDir, String input) {
   	//The file to put, the location to put
     File file;
   	String outFile;
@@ -232,7 +377,6 @@ public class ftp_client {
     //check the file actually exists
     try {
       if (file.exists()) {
-        //if so, put the file out
         fileInputStream = new FileInputStream(outFile);
         ftpClient.storeFile(outFile, fileInputStream);
         //verify the file is there
@@ -293,7 +437,7 @@ public class ftp_client {
   }
 
   //Lists the remote files/folders in the provided directory
-  private static boolean listRemote(String dir) {
+  static boolean listRemote(String dir) {
   	try {
 			FTPFile[] fileList = ftpClient.listFiles(dir);
 
@@ -419,7 +563,7 @@ public class ftp_client {
     }
   }
 
-  private static boolean logout() {
+  static boolean logout() {
     if(ftpClient.isConnected()) {
       try {
       	System.out.println("Logging out...");
