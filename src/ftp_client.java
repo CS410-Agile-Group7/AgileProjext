@@ -1,7 +1,12 @@
 import java.io.*;
+
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.io.CopyStreamException;
+
 import java.util.*;
 
 public class ftp_client {
@@ -9,7 +14,6 @@ public class ftp_client {
   private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
   private static FTPClient ftpClient = new FTPClient();
   private static FileInputStream fileInputStream = null;
-
   public static boolean isInteger(String input)
   {
      try {
@@ -117,6 +121,16 @@ public class ftp_client {
   }
 
   public static void main(String[] args) {
+  	/*
+  	 ftpClient.enterLocalPassiveMode();
+    try {
+					ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					System.out.println("Bin FT error");
+					e1.printStackTrace();
+				}
+				*/
     //setupFTPClient(args);
     if (args.length == 0) {
       System.out.println("enter connection info: ");
@@ -134,8 +148,8 @@ public class ftp_client {
       }
     }
     String command;
-    String localDir = System.getProperty("user.dir");
-
+    String localDir = System.getProperty("user.dir"); 
+    
     while(ftpClient.isConnected()) {
       command = getVar("command");
       switch(command) {
@@ -176,7 +190,12 @@ public class ftp_client {
         case "clear":
           clear();
         break;
-
+        /*
+        case "get":
+        case "g":
+        	getFile(remDir, input);
+        	break;
+*/
         default:
           //REGEX Matching
         	//change directory - cd local/cdl
@@ -192,7 +211,24 @@ public class ftp_client {
           //put multiple putm/pm
           if(command.matches("putm (.*)") || command.matches("pm (.*)")) {
           	putMultiple(localDir, command);
-          } else {
+          }
+          
+          if(command.matches("get (.*)") || command.matches("g (.*)")) {
+          	try {
+												getFile(command);
+											} catch (IOException e) {
+              System.out.println("getFile did not work.");
+												// TODO Auto-generated catch block
+												e.printStackTrace();
+											}
+          }
+          
+          else if(command.matches("getm (.*)") || command.matches("gm (.*)")) {
+          	getMultiple(command);
+          }
+          
+          
+          else {
             System.out.println("\tCommand not found. For help input \"help\"");
           }
       }
@@ -306,6 +342,122 @@ public class ftp_client {
     }
     //if all putFiles go correctly, return true
     return true;
+  }
+  
+  private static boolean getMultiple(String input)
+  {
+ //The file to get
+   File file;
+ 	String outFile;
+
+ 	//remove "get"/"g" from input, get rid of blank spaces
+ 	if(input.startsWith("getm"))
+ 	 input = input.replace("getm ","");
+ 	else //start with gm
+ 		input = input.replaceAll("gm ", "");
+ 	 
+   //split on whitespaces
+   String[] inputList = input.split(" "); //need to change, should match more than one whitespace
+   //get file for each file
+   for(String i: inputList) {
+   	i = "get ".concat(i);
+   	//if any of the getFiles go wrong, return false
+   	try {
+					if(getFile(i) == false)
+						return false;
+				} catch (FTPConnectionClosedException e) {
+					 System.out.println("FTPConnnectionClosedException - getMult");
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CopyStreamException e) {
+					System.out.println("CopyStreamException - getMult");
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					System.out.println("getMult IO Excep");
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+   }
+   //if all getFiles go correctly, return true
+   return true;
+  }
+  
+  private static boolean getFile(String input) throws IOException, FTPConnectionClosedException, CopyStreamException, IOException 
+  {
+  	
+  	ftpClient.enterLocalPassiveMode();
+   try {
+				ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				System.out.println("Bin FT error");
+				e1.printStackTrace();
+			}
+  	String remDir = ftpClient.printWorkingDirectory();
+  	File locfile = null;
+  	String inFile = null;
+  	boolean success = false;
+  	
+  	String remoteFilePath = "";
+  	
+    String[] inputList = input.split(" "); //need to change, should match more than one whitespace
+    
+    if(inputList[1] != null)
+     inFile = inputList[1];
+    if(inputList.length > 2)
+    {	
+     //if provided, the location to put the file
+     if (inputList[2] != null) 
+     {
+    	 inFile = inputList[2];
+    	}
+    }
+    locfile = new File(inFile); //local path
+    
+    
+    //get the provided file
+    remoteFilePath = remDir;
+    remoteFilePath = remoteFilePath.concat(inputList[1]);
+    
+    //check the file actually exists
+    try {
+      //if (file.exists()) {
+        //if so, put the file out
+      	 OutputStream outputstream = new BufferedOutputStream(new FileOutputStream(locfile));
+      	 
+      	 try {
+        success = ftpClient.retrieveFile(remoteFilePath, outputstream);
+        outputstream.close();
+      	 }
+      	 
+      	 catch(Exception e) {
+      	  System.out.println("Did not retrieve file successfully.");
+      	 }
+        if(success)
+        	return true;
+        
+        
+       
+        
+      //}
+        /*
+      else {
+        System.out.println("File not found :(");
+        return false;
+      }
+      */
+    }
+    catch(Exception e) {
+      System.out.println("Something went wrong :(");
+      return false;
+    }
+    
+  	//TODO
+ 	return false;
+
+   
+  	
   }
 
   //Puts the specified file from the local server to the specified location on the remote server
