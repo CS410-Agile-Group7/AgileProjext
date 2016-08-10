@@ -219,8 +219,7 @@ public class ftp_client {
           //put multiple putm/pm
           if(command.matches("putm (.*)") || command.matches("pm (.*)")) {
           	putMultiple(localDir, command);
-          }
-          
+          }else
           if(command.matches("get (.*)") || command.matches("g (.*)")) {
           	try {
 												getFile(command);
@@ -512,8 +511,9 @@ public class ftp_client {
 
   //Puts the specified file from the local server to the specified location on the remote server
   protected static boolean putFile(String localDir, String input) {
-  	//The file to put, the location to put
+  	//The file to put, where the local file is, the location to put
     File file;
+    String location;
   	String outFile;
   	//remove "put"/"p" from input, get rid of blank spaces
   	input = input.replace("put","");
@@ -522,21 +522,25 @@ public class ftp_client {
     //split on whitespaces
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
     //get the provided file
-    outFile = localDir;
-    outFile = outFile.concat("/");
-    outFile = outFile.concat(inputList[0]);
-    file = new File(outFile);
+    location = localDir;
+    location = location.concat("\\");
+    location = location.concat(inputList[0]);
+    outFile = inputList[0];
+    file = new File(location);
     //check the file actually exists
     try {
       if (file.exists()) {
-        fileInputStream = new FileInputStream(outFile);
+        fileInputStream = new FileInputStream(file);
         ftpClient.storeFile(outFile, fileInputStream);
         //verify the file is there
         FTPFile[] remoteFile = ftpClient.listFiles(inputList[0]);
-        if(remoteFile.length == 1)
+        if(remoteFile.length == 1) {
+          fileInputStream.close();
         	return true;
-        else
+        } else {
+          fileInputStream.close();
         	return false;
+        }
       }
       else {
         System.out.println("File not found :(");
