@@ -163,28 +163,6 @@ public class ftp_client {
           listLocal(localDir);
         break;
 
-        case "make directory":
-        case "mk dir":
-        case "mkdir":
-          createDirectory();
-          break;
-
-        case "delete directory":
-        case "delete dir":
-        case "rm dir":
-        case "rmd":
-        case "remove directory":
-          removeDirectory();
-          break;
-
-
-        case "delete file":
-        case "rm file":
-        case "remove file":
-        case "rmf":
-          removeFile();
-          break;
-
         case "exit":
         case "logout":
           exit();
@@ -219,15 +197,21 @@ public class ftp_client {
           //put multiple putm/pm
           if(command.matches("putm (.*)") || command.matches("pm (.*)")) {
           	putMultiple(localDir, command);
-          }else
+          }else if (command.matches("make directory (.*)") || command.matches("mk dir (.*)") || command.matches("mkdir (.*)")) {
+          	createDirectory(command);
+          } else if (command.matches("remove directory (.*)") || command.matches("delete directory (.*)") || command.matches("delete dir (.*)") || command.matches("rm dir (.*)") || command.matches("rmd (.*)")) {
+          	removeDirectory(command);
+          } else if (command.matches("remove file (.*)") || command.matches("delete file (.*)") || command.matches("rm file (.*)") || command.matches("rmf (.*)")) {
+          	removeFile(command);
+          } else
           if(command.matches("get (.*)") || command.matches("g (.*)")) {
           	try {
-												getFile(command);
-											} catch (IOException e) {
+							getFile(command);
+						} catch (IOException e) {
               System.out.println("getFile did not work.");
-												// TODO Auto-generated catch block
-												e.printStackTrace();
-											}
+							e.printStackTrace();
+						}
+          	
           }
           
           else if(command.matches("getm (.*)") || command.matches("gm (.*)")) {
@@ -248,35 +232,28 @@ public class ftp_client {
   /***** Command Functions *****/
 
   //Creates directory on remote server, verifying that the directory doesn't already exist first
-  private static boolean createDirectory() {
+  private static boolean createDirectory(String input) {
     try {
       int returnCode;
-      Scanner in = new Scanner(System.in);
-      String toCreate = getVar("Please enter the directory name");
+      //parse and get directory name
+      String toCreate = input;
+      toCreate = toCreate.replace("make directory","");
+      toCreate = toCreate.replace("mk dir","");
+      toCreate = toCreate.replace("mkdir","");
+      toCreate = toCreate.trim();
       do {
         ftpClient.changeWorkingDirectory("/" + toCreate); //Tries to see if that directory alraedy exists
         returnCode = ftpClient.getReplyCode();
         //If the directory exists, then the reply code is unavailable (giving a return code other than 550)
         if(returnCode != 550) {
           System.out.println("The directory '" + toCreate + "' already exists.");
-          System.out.println("Do you want to enter another directory? (Y/N)");
-          char reply = in.next().charAt(0);
-          in.nextLine();
-          reply = Character.toUpperCase(reply);
-          if(reply == 'Y') {
-            toCreate = getVar("Please enter another directory name");
-          }
-          else {
-            ftpClient.changeWorkingDirectory("/");
-            return false;
-          }
+          return false;
         }
       } while(returnCode != 550); //Prompts user for another directory name if the one they enter already exists
       ftpClient.changeWorkingDirectory("/");
       boolean success = ftpClient.makeDirectory(toCreate);
       //showServerReply(ftpClient);
       if (success) {
-        System.out.println("Successfully created directory: " + toCreate);
         return true;
       } else {
         System.out.println("Failed to create directory: " + toCreate);
@@ -290,28 +267,26 @@ public class ftp_client {
   }
 
   //Removes directory if it is empty
-  private static boolean removeDirectory() {
+  private static boolean removeDirectory(String input) {
     try {
-      Scanner in = new Scanner(System.in);
       int returnCode;
-      String toRemove = getVar("Please enter the directory to delete");
+      //parse and get directory name
+      String toRemove = input;
+      toRemove = toRemove.replace("remove directory","");
+      toRemove = toRemove.replace("delete directory","");
+      toRemove = toRemove.replace("delete dir","");
+      toRemove = toRemove.replace("rm dir","");
+      toRemove = toRemove.replace("rmd","");
+      toRemove = toRemove.trim();
       do {
       ftpClient.changeWorkingDirectory("/" + toRemove);
       returnCode = ftpClient.getReplyCode();
         //Return code is 550 if the directory we tried to change into doesn't exist
       if(returnCode == 550) {
         System.out.println("The directory '" + toRemove + "' doesn't exist.");
-        System.out.println("Do you want to enter another directory? (Y/N)");
-        char reply = in.next().charAt(0);
-        in.nextLine();
-        reply = Character.toUpperCase(reply);
-        if (reply == 'Y') {
-          toRemove = getVar("Please enter another directory to delete");
-        }
-        else
-          return false;
+        return false;
       }
-      }while(returnCode == 550);
+      } while(returnCode == 550);
       ftpClient.changeWorkingDirectory("/");
       boolean deleted = ftpClient.removeDirectory("/" + toRemove);
       if(deleted){
@@ -330,37 +305,34 @@ public class ftp_client {
     }
 
   //Remove file from server
-  private static boolean removeFile() {
+  private static boolean removeFile(String input) {
     try {
-      Scanner in = new Scanner(System.in);
       int returnCode;
+      String toRemove = input;
+      toRemove = toRemove.replace("remove file","");
+      toRemove = toRemove.replace("delete file","");
+      toRemove = toRemove.replace("rm file","");
+      toRemove = toRemove.replace("rmf","");
+      toRemove = toRemove.trim();
       InputStream inputStream;
-      String toDelete = getVar("File to delete (with extension and path if file is in subdirectory)");
       do {
         ftpClient.changeWorkingDirectory("/");
-        inputStream = ftpClient.retrieveFileStream(toDelete);
+        inputStream = ftpClient.retrieveFileStream(toRemove);
         returnCode = ftpClient.getReplyCode();
         //Return code is 550 if the directory we tried to change into doesn't exist
         if (inputStream == null || returnCode == 550) {
-          System.out.println(toDelete + " is not a valid file. Could not delete.");
-          System.out.println("Do you want to enter another file? (Y/N)");
-          char reply = in.next().charAt(0);
-          in.nextLine();
-          reply = Character.toUpperCase(reply);
-          if (reply == 'Y') {
-            toDelete = getVar("Please enter another file to delete");
-          } else
-            return false;
+          System.out.println(toRemove + " is not a valid file. Could not delete.");
+          return false;
         }
       } while (inputStream == null || returnCode == 550);
-      boolean wasDeleted = ftpClient.deleteFile(toDelete);
+      boolean wasDeleted = ftpClient.deleteFile(toRemove);
       ftpClient.changeWorkingDirectory("/");
       if(wasDeleted){
-        System.out.println(toDelete + " was successfully deleted.");
+        System.out.println(toRemove + " was successfully deleted.");
         return true;
       }
       else{
-        System.out.println("Couldn't delete " + toDelete);
+        System.out.println("Couldn't delete " + toRemove);
         return false;
       }
     } catch (IOException ex) {
@@ -382,12 +354,15 @@ public class ftp_client {
     input = input.trim();
     //split on whitespaces
     String[] inputList = input.split(" "); //need to change, should match more than one whitespace
+    boolean success = true;
     //put file for each file
     for(String i: inputList) {
     	i = "put".concat(i);
     	//if any of the putFiles go wrong, return false
-    	if(putFile(localDir, i) == false)
-    		return false;
+    	if(putFile(localDir, i) == false) {
+    		System.out.println("Failed to put file " + i);
+        return false;
+    	}
     }
     //if all putFiles go correctly, return true
     return true;
@@ -412,8 +387,10 @@ public class ftp_client {
    	i = "get ".concat(i);
    	//if any of the getFiles go wrong, return false
    	try {
-					if(getFile(i) == false)
+					if(getFile(i) == false) {
+						System.out.println("Failed to get file " + i);
 						return false;
+					}
 				} catch (FTPConnectionClosedException e) {
 					 System.out.println("FTPConnnectionClosedException - getMult");
 					// TODO Auto-generated catch block
@@ -429,6 +406,7 @@ public class ftp_client {
 				}
    }
    //if all getFiles go correctly, return true
+   System.out.println("Successfully get files");
    return true;
   }
   
@@ -483,13 +461,14 @@ public class ftp_client {
       	 catch(Exception e) {
       	  System.out.println("Did not retrieve file successfully.");
       	 }
-        if(success)
+        if(success == false) {
+					System.out.println("Failed to get file " + inputList[1]);
+        	return false;
+        } else {
         	return true;
+        }
         
-        
-       
-        
-      //}
+        //}
         /*
       else {
         System.out.println("File not found :(");
@@ -501,12 +480,7 @@ public class ftp_client {
       System.out.println("Something went wrong :(");
       return false;
     }
-    
-  	//TODO
- 	return false;
 
-   
-  	
   }
 
   //Puts the specified file from the local server to the specified location on the remote server
@@ -539,6 +513,7 @@ public class ftp_client {
         	return true;
         } else {
           fileInputStream.close();
+					System.out.println("Failed to put file " + file);
         	return false;
         }
       }
