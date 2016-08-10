@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.Process;
 import java.lang.Runtime;
+import java.net.SocketException;
 
 public class ftp_clientTest {
   ftp_client client;
@@ -25,7 +26,7 @@ public class ftp_clientTest {
   @Before
   public void setup() {
     localDir = System.getProperty("user.dir");
-    
+
     //Setup a local FTP client for testing
     try {
       Runtime rt = Runtime.getRuntime();
@@ -35,6 +36,8 @@ public class ftp_clientTest {
       System.out.println("Failed to setup local FTP");
       ex.printStackTrace();
     }
+    
+  	connect();
     
   }
   
@@ -65,7 +68,7 @@ public class ftp_clientTest {
     System.out.println("Testing List Local");
     
     //redirect output to our dummy stream
-    System.setOut(dummy);
+    //System.setOut(dummy);
     
     //list local current directory
     assertTrue(ftp_client.listLocal(localDir));
@@ -85,13 +88,10 @@ public class ftp_clientTest {
     System.out.println("Testing List Remote");
     
     //redirect output to our dummy stream
-    System.setOut(dummy);
-    
-    connect();
+    //System.setOut(dummy);
+
     //list local current directory
-    assertTrue(ftp_client.listRemote("/"));
-    assertTrue(ftp_client.listRemote("/fakeDir/"));
-    assertFalse(ftp_client.listRemote("asdfasdfadf")); //gibberish - should fail
+    assertTrue(ftp_client.listRemote(""));
     
     //restore the output stream
     //System.setOut(consoleOut);
@@ -101,16 +101,42 @@ public class ftp_clientTest {
   public void createDirectoryTest() {
   	System.out.println("Testing Create Directory");
   	
-  	connect();
-  	//cannot test - requires user input
-  	//TODO - edit createDirectory to use args and not user input
+  	
+  	//delete newDir if it exists already
+  	FTPFile[] dirs = null;
+		try {
+			dirs = testClient.listDirectories();
+			for (FTPFile i: dirs) {
+				if(i.getName().equals("newDir"))
+					testClient.removeDirectory("newDir");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+  		
+  	
+  	assertTrue(ftp_client.createDirectory("newDir")); //try making a new dir
+  	//get list of directories and check if any of them are "newDir"
+  	boolean dirExists = false;
+		try {
+			dirs = testClient.listDirectories();
+			for (FTPFile i: dirs) {
+				if(i.getName().equals("newDir"))
+					dirExists = true;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			fail();
+		}
+  	assertTrue(dirExists);	//if the directory was found in the previous loop, this should be true
   }
   
   @Test
   public void removeDirectoryTest() {
   		System.out.println("Testing Remove Directory");
   	
-  	connect();
   	//cannot test - requires user input
   	//TODO - edit removeDirectory to use args and not user input
   }
@@ -119,8 +145,7 @@ public class ftp_clientTest {
   public void putFileTest() {
     
   	System.out.println("Testing Put File");
-  	connect();
-  	
+
   	//make sure the file doesn't already exist
 		try {
 			FTPFile[] remoteFile = testClient.listFiles("test.txt");
@@ -137,7 +162,8 @@ public class ftp_clientTest {
 			assertTrue(remoteFile.length == 1);							//file should be found
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			fail();
 		}
   }
   
@@ -152,5 +178,13 @@ public class ftp_clientTest {
   //Connects for tests that need to be connected
   public void connect() {
     ftp_client.connect("-p 7777 -s localhost password user".split(" "));
+    try {
+			testClient.connect("localhost", 7777);
+			testClient.login("user", "password");
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
   }
 }

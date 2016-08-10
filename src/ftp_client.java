@@ -232,7 +232,7 @@ public class ftp_client {
   /***** Command Functions *****/
 
   //Creates directory on remote server, verifying that the directory doesn't already exist first
-  private static boolean createDirectory(String input) {
+  protected static boolean createDirectory(String input) {
     try {
       int returnCode;
       //parse and get directory name
@@ -241,18 +241,24 @@ public class ftp_client {
       toCreate = toCreate.replace("mk dir","");
       toCreate = toCreate.replace("mkdir","");
       toCreate = toCreate.trim();
-      do {
-        ftpClient.changeWorkingDirectory("/" + toCreate); //Tries to see if that directory alraedy exists
-        returnCode = ftpClient.getReplyCode();
-        //If the directory exists, then the reply code is unavailable (giving a return code other than 550)
-        if(returnCode != 550) {
-          System.out.println("The directory '" + toCreate + "' already exists.");
-          return false;
-        }
-      } while(returnCode != 550); //Prompts user for another directory name if the one they enter already exists
-      ftpClient.changeWorkingDirectory("/");
+      
+      //check if the directory already exists
+      FTPFile[] files;
+      try {
+  			files = ftpClient.listDirectories();
+  			for (FTPFile i: files) {
+  				if(i.getName().equals("newDir"))
+            System.out.println("The directory '" + toCreate + "' already exists.");
+  				return false;
+  			}
+  		} catch (IOException e) {
+  			// TODO Auto-generated catch block
+  			//e.printStackTrace();
+        System.out.println("Something went wrong. Failed to create directory.");
+  			return false;
+  		}
+      
       boolean success = ftpClient.makeDirectory(toCreate);
-      //showServerReply(ftpClient);
       if (success) {
         return true;
       } else {
@@ -267,7 +273,7 @@ public class ftp_client {
   }
 
   //Removes directory if it is empty
-  private static boolean removeDirectory(String input) {
+  protected static boolean removeDirectory(String input) {
     try {
       int returnCode;
       //parse and get directory name
@@ -305,7 +311,7 @@ public class ftp_client {
     }
 
   //Remove file from server
-  private static boolean removeFile(String input) {
+  protected static boolean removeFile(String input) {
     try {
       int returnCode;
       String toRemove = input;
@@ -343,7 +349,7 @@ public class ftp_client {
 
 
   //Puts all specified files from lcoal server to specified location on the remote server
-  private static boolean putMultiple(String localDir, String input) {
+  protected static boolean putMultiple(String localDir, String input) {
   	//The file to put
     File file;
   	String outFile;
@@ -368,7 +374,7 @@ public class ftp_client {
     return true;
   }
   
-  private static boolean getMultiple(String input)
+  protected static boolean getMultiple(String input)
   {
  //The file to get
    File file;
@@ -410,7 +416,7 @@ public class ftp_client {
    return true;
   }
   
-  private static boolean getFile(String input) throws IOException, FTPConnectionClosedException, CopyStreamException, IOException 
+  protected static boolean getFile(String input) throws IOException, FTPConnectionClosedException, CopyStreamException, IOException 
   {
   	
   	ftpClient.enterLocalPassiveMode();
@@ -571,7 +577,8 @@ public class ftp_client {
   static boolean listRemote(String dir) {
   	try {
 			FTPFile[] fileList = ftpClient.listFiles(dir);
-
+			if (fileList == null)
+				return false;
 			//get the full path before printing
 			dir = ftpClient.getLocalAddress().toString();
 			System.out.println("Remote Directory: " + dir);
@@ -584,8 +591,8 @@ public class ftp_client {
         }
       }
 		} catch (IOException e) {
+			e.printStackTrace();
 			return false;
-			//e.printStackTrace();
 		}
 		return true;
   }
